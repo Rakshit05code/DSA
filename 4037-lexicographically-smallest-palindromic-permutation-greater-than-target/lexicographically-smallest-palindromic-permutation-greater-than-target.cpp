@@ -1,59 +1,72 @@
 class Solution {
 public:
     string lexPalindromicPermutation(string s, string target) {
-        int n = s.length(), m = n / 2;
-        vector<int> cnt(26, 0);
-        for (char c : s) cnt[c - 'a']++;
-
-        int odd = 0;
-        char mid = 0;
-        for (int i = 0; i < 26; ++i) {
-            if (cnt[i] % 2) {
-                odd++;
-                mid = 'a' + i;
-            }
+        int n=s.size();
+        vector<int>hsh(26,0);
+        for(int i=0;i<n;i++){
+            hsh[s[i]-'a']++;
         }
-
-        if (odd > n % 2) return "";
-
-        vector<int> avail(26, 0);
-        for (int i = 0; i < 26; ++i) avail[i] = cnt[i] / 2;
-
-        auto make_pal = [&](string prefix, vector<int> rem) {
-            for (int i = 0; i < 26; ++i) prefix.append(rem[i], 'a' + i);
-            string rev = prefix;
-            if (n % 2) prefix += mid;
-            reverse(rev.begin(), rev.end());
-            return prefix + rev;
-        };
-
-        string ans = "";
-        auto update = [&](const string& cand) {
-            if (cand > target && (ans.empty() || cand < ans)) ans = cand;
-        };
-
-        string pref = "";
-        update(make_pal(pref, avail));
-
-        for (int i = 0; i < m; ++i) {
-            for (int c = target[i] - 'a' + 1; c < 26; ++c) {
-                if (avail[c]) {
-                    avail[c]--;
-                    update(make_pal(pref + char('a' + c), avail));
-                    avail[c]++;
+        string ans=s;
+        int odd=0;
+        for(int i=0;i<26;i++){
+            if(hsh[i]%2!=0){
+                odd++;
+                ans[n/2]=char('a'+i);
+            }
+            hsh[i]/=2;
+        }
+        if(odd>1){
+            return "";
+        }
+        int p=0;
+        while(p<n/2 && hsh[target[p]-'a']){
+            hsh[target[p]-'a']--;
+            p++;
+        }
+        int start=min(n-1,p);
+        for(int i=start;i>=0;i--){
+            if(i==(n/2)){
+                for(int j=0;j<n/2;j++){
+                    ans[j] = target[j];
+                    ans[n-1-j] = target[j];
+                }
+                if(ans > target){
+                    return ans;
+                }
+                continue;
+            }
+            int b=target[i]-'a';
+            if(i<p){
+                hsh[b]++;
+            }
+            int idx=-1;
+            for(int c=b+1;c<26;c++){
+                if(hsh[c]){
+                    hsh[c]--;
+                    idx=c;
+                    break;
                 }
             }
-
-            int t_idx = target[i] - 'a';
-            if (!avail[t_idx]) break;
-            pref += target[i];
-            avail[t_idx]--;
+            if(idx==-1){
+                continue;
+            }
+            for(int j=0;j<i;j++){
+                ans[j]=target[j];
+            }
+            ans[i]=char('a'+idx);
+            int k=i+1;
+            for(int c=0;c<26;c++){
+                while(k<n && hsh[c]){
+                    ans[k]=char(c+'a');
+                    k++;
+                    hsh[c]--;
+                }
+            }
+            for(int j=0;j<n/2;j++){
+                ans[n-1-j]=ans[j];
+            }
+            return ans;
         }
-
-        if (pref.size() == m) {
-            update(make_pal(pref, avail));
-        }
-
-        return ans;
+        return "";
     }
 };
